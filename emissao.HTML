@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Carteira de Estudante Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
+            justify-content: center;
+            gap: 30px; /* Espaçamento entre o formulário e a carteira */
+            width: 100%;
+            max-width: 1000px; /* Largura máxima do contêiner geral */
+        }
+
+        /* --- Estilos do Formulário --- */
+        .form-section {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px; /* Largura do formulário */
+        }
+
+        .form-section h2 {
+            color: #264653;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="date"] {
+            width: calc(100% - 20px); /* Para compensar o padding */
+            padding: 12px 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box; /* Inclui padding e borda na largura total */
+        }
+
+        .form-group input[type="file"] {
+            width: 100%; /* Ocupa toda a largura */
+            padding: 8px 0; /* Menos padding vertical para files */
+            border: none;
+            font-size: 0.95em;
+        }
+
+        .form-group input:focus {
+            border-color: #2a9d8f;
+            outline: none;
+            box-shadow: 0 0 5px rgba(42, 157, 143, 0.3);
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 600;
+            flex-grow: 1; /* Permite que os botões se expandam */
+            min-width: 150px; /* Largura mínima para botões */
+        }
+
+        .btn-primary {
+            background-color: #2a9d8f;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #217a70;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cccccc;
+            transform: translateY(-2px);
+        }
+
+        /* --- Estilos da Carteira --- */
+        #studentCardDisplay {
+            width: 100%;
+            max-width: 400px; /* Largura padrão de um cartão */
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #2a9d8f, #264653); /* Cores verdes/azuis */
+            padding: 20px;
+            color: white;
+            position: relative;
+            box-sizing: border-box;
+            border-radius: 15px; /* Bordas arredondadas também para o conteúdo */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px; /* Reduzindo a margem */
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.3em; /* Reduzindo um pouco a fonte */
+            font-weight: 600;
+        }
+
+        .logos {
+            display: flex;
+            gap: 8px; /* Reduzindo o gap */
+        }
+
+        .logos img {
+            height: 25px; /* Reduzindo o tamanho dos logos */
+            filter: brightness(0) invert(1); /* Torna os logos brancos */
+        }
+
+        .university-logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .university-logo {
+            max-height: 50px; /* Altura máxima do logo da universidade */
+            width: auto;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #eee; /* Fundo para quando não tiver logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .university-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain; /* Garante que a imagem caiba sem cortar */
+        }
+
+        .student-photo-container {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            background-color: #e0e0e0;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .student-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Garante que a imagem cubra todo o espaço */
+        }
+
+        /* Pseudoelemento para o texto 'FOTO' quando não há imagem */
+        /* Note: o seletor :has() pode não ser suportado em todos os navegadores mais antigos */
+        .student-photo-container:not(:has(img[src]:not([src=""])))::before {
+            content: 'FOTO';
+            color: #888;
+            font-size: 0.8em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Classe adicionada/removida via JS para controlar o pseudoelemento em navegadores que não suportam :has() */
+        .student-photo-container.show-placeholder-text::before {
+            content: 'FOTO';
+            color: #888;
+            font-size: 0.8em;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+
+        .student-info {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .student-info p {
+            margin: 4px 0;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+
+        .student-info p strong {
+            font-weight: 700;
+        }
+
+        .security-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: auto; /* Empurra para o final */
+        }
+
+        .qr-code-placeholder {
+            width: 70px;
+            height: 70px;
+            background-color: #fff;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.6em;
+            color: #333;
+            text-align: center;
+            line-height: 1.1;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .card-id-number {
+            font-size: 0.7em;
+            text-align: right;
+            opacity: 0.8;
+        }
+
+        .card-footer {
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 8px 15px;
+            font-size: 0.7em;
+            text-align: center;
+            border-top: 1px solid #eee;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column; /* Empilha formulário e carteira em telas menores */
+                align-items: center;
+            }
+            .form-section, #studentCardDisplay {
+                max-width: 90%; /* Ajusta largura para caber em telas menores */
+                width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-section, #studentCardDisplay {
+                max-width: 100%;
+                width: 100%;
+                padding: 15px;
+            }
+            .form-section h2 {
+                font-size: 1.5em;
+            }
+            .btn {
+                width: 100%; /* Botões ocupam 100% da largura em telas muito pequenas */
+                min-width: unset;
+            }
+            .card-header h2 {
+                font-size: 1.1em;
+            }
+            .logos img {
+                height: 20px;
+            }
+            .student-photo-container {
+                width: 80px;
+                height: 80px;
+                margin-bottom: 10px;
+            }
+            .student-info p {
+                font-size: 0.8em;
+            }
+            .qr-code-placeholder {
+                width: 60px;
+                height: 60px;
+                font-size: 0.5em;
+            }
+            .card-id-number {
+                font-size: 0.6em;
+            }
+            .card-footer {
+                font-size: 0.65em;
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="form-section">
+            <h2>Preencha as Informações</h2>
+            <div class="form-group">
+                <label for="studentName">Nome Completo:</label>
+                <input type="text" id="studentName" placeholder="Ex: Maria da Silva" value="NOME DO ESTUDANTE COMPLETO">
+            </div>
+            <div class="form-group">
+                <label for="studentPhoto">Foto do Estudante:</label>
+                <input type="file" id="studentPhoto" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="universityLogo">Logo da Instituição:</label>
+                <input type="file" id="universityLogo" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="studentDOB">Data de Nascimento:</label>
+                <input type="date" id="studentDOB" value="2000-01-15">
+            </div>
+            <div class="form-group">
+                <label for="studentInstitution">Instituição de Ensino:</label>
+                <input type="text" id="studentInstitution" placeholder="Ex: Universidade Federal de Pernambuco" value="Nome da Instituição de Ensino">
+            </div>
+            <div class="form-group">
+                <label for="studentCourse">Curso:</label>
+                <input type="text" id="studentCourse" placeholder="Ex: Ciência da Computação" value="Nome do Curso">
+            </div>
+            <div class="form-group">
+                <label for="studentRA">RA / Matrícula:</label>
+                <input type="text" id="studentRA" placeholder="Ex: 123456789" value="123456789">
+            </div>
+            <div class="form-group">
+                <label for="studentValidUntil">Válido Até:</label>
+                <input type="date" id="studentValidUntil" value="2026-03-31">
+            </div>
+            <div class="buttons-container">
+                <button class="btn btn-primary" id="generateCardBtn">Gerar Carteira</button>
+                <button class="btn btn-secondary" id="downloadCardBtn" style="display: none;">Baixar Imagem da Carteira</button>
+                <button class="btn btn-secondary" id="downloadHtmlBtn">Abrir HTML da Carteira</button> </div>
+        </div>
+
+        <div class="student-card-container" id="studentCardDisplay">
+            <div class="card-front">
+                <div class="card-header">
+                    <div>
+                        <h2>DOCUMENTO DO ESTUDANTE</h2>
+                        <div class="university-logo-container">
+                            <div class="university-logo">
+                                <img id="displayUniversityLogo" src="" alt="Logo Universidade">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="logos">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/UNE_logo.svg/1200px-UNE_logo.svg.png" alt="Logo UNE">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Logotipo_da_UBES.svg/1200px-Logotipo_da_UBES.svg.png" alt="Logo UBES">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Logotipo_ANPG.png/800px-Logotipo_ANPG.png" alt="Logo ANPG">
+                    </div>
+                </div>
+
+                <div class="student-photo-container">
+                    <img id="displayStudentPhoto" src="" alt="Foto do Estudante">
+                </div>
+
+                <div class="student-info">
+                    <p><strong>NOME:</strong> <span id="displayStudentName">NOME DO ESTUDANTE COMPLETO</span></p>
+                    <p><strong>NASCIMENTO:</strong> <span id="displayStudentDOB">DD/MM/AAAA</span></p>
+                    <p><strong>INSTITUIÇÃO:</strong> <span id="displayStudentInstitution">Nome da Instituição de Ensino</span></p>
+                    <p><strong>CURSO:</strong> <span id="displayStudentCourse">Nome do Curso</span></p>
+                    <p><strong>RA:</strong> <span id="displayStudentRA">123456789</span></p>
+                    <p><strong>VÁLIDO ATÉ:</strong> <span id="displayStudentValidUntil">31/03/AAAA</span></p>
+                </div>
+
+                <div class="security-area">
+                    <div class="qr-code-placeholder">
+                        QR CODE<br>ITICPBrasil
+                    </div>
+                    <div class="card-id-number">
+                        ID DIGITAL: <span id="displayCardId">1234.5678.9101.1213</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                Este documento segue a Lei Federal 12.933/13 e as normas do ITI-ICP Brasil.<br>
+                Emissão: [Nome da Entidade Emissora Local, ex: DCE/Centro Acadêmico/UGES]
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Elementos do Formulário ---
+            const studentNameInput = document.getElementById('studentName');
+            const studentPhotoInput = document.getElementById('studentPhoto');
+            const universityLogoInput = document.getElementById('universityLogo');
+            const studentDOBInput = document.getElementById('studentDOB');
+            const studentInstitutionInput = document.getElementById('studentInstitution');
+            const studentCourseInput = document.getElementById('studentCourse');
+            const studentRAInput = document.getElementById('studentRA');
+            const studentValidUntilInput = document.getElementById('studentValidUntil');
+            const generateCardBtn = document.getElementById('generateCardBtn');
+            const downloadCardBtn = document.getElementById('downloadCardBtn');
+            const downloadHtmlBtn = document.getElementById('downloadHtmlBtn'); // <-- DEFINIÇÃO AQUI
+
+            // --- Elementos de Exibição da Carteira ---
+            const displayStudentName = document.getElementById('displayStudentName');
+            const displayStudentPhoto = document.getElementById('displayStudentPhoto');
+            const displayUniversityLogo = document.getElementById('displayUniversityLogo');
+            const displayStudentDOB = document.getElementById('displayStudentDOB');
+            const displayStudentInstitution = document.getElementById('displayStudentInstitution');
+            const displayStudentCourse = document.getElementById('displayStudentCourse');
+            const displayStudentRA = document.getElementById('displayStudentRA');
+            const displayStudentValidUntil = document.getElementById('displayStudentValidUntil');
+            const displayCardId = document.getElementById('displayCardId');
+            const studentCardDisplay = document.getElementById('studentCardDisplay'); // O container da carteira para o html2canvas
+
+            // --- Funções Auxiliares ---
+
+            // Formata a data de YYYY-MM-DD para DD/MM/YYYY
+            function formatDate(dateString) {
+                if (!dateString) return 'DD/MM/AAAA';
+                const [year, month, day] = dateString.split('-');
+                return `${day}/${month}/${year}`;
+            }
+
+            // Gera um ID Digital aleatório para simulação
+            function generateRandomId() {
+                return Math.random().toString(36).substring(2, 6) + '.' +
+                        Math.random().toString(36).substring(2, 6) + '.' +
+                        Math.random().toString(36).substring(2, 6) + '.' +
+                        Math.random().toString(36).substring(2, 6);
+            }
+
+            // Lê um arquivo de imagem e exibe-o no elemento <img> alvo
+            function previewImage(input, imgElement) {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imgElement.src = e.target.result;
+                        imgElement.style.display = 'block';
+
+                        // Esconde o pseudoelemento 'FOTO' controlando a classe
+                        if (imgElement.id === 'displayStudentPhoto') {
+                             const photoContainer = imgElement.closest('.student-photo-container');
+                             if (photoContainer) photoContainer.classList.remove('show-placeholder-text'); // Remove classe para mostrar a imagem
+                        }
+                    }
+                    reader.readAsDataURL(input.files[0]);
+                } else {
+                    imgElement.src = '';
+                    imgElement.style.display = 'none'; // Esconde a imagem se não houver arquivo
+
+                    // Mostra o pseudoelemento 'FOTO' controlando a classe
+                    if (imgElement.id === 'displayStudentPhoto') {
+                        const photoContainer = imgElement.closest('.student-photo-container');
+                        if (photoContainer) photoContainer.classList.add('show-placeholder-text'); // Adiciona classe para mostrar o ::before
+                    }
+                }
+            }
+
+            // --- Atualiza os dados na carteira ---
+            function updateCardDisplay() {
+                displayStudentName.textContent = studentNameInput.value.toUpperCase() || 'NOME DO ESTUDANTE COMPLETO';
+                displayStudentDOB.textContent = formatDate(studentDOBInput.value);
+                displayStudentInstitution.textContent = studentInstitutionInput.value || 'Nome da Instituição de Ensino';
+                displayStudentCourse.textContent = studentCourseInput.value || 'Nome do Curso';
+                displayStudentRA.textContent = studentRAInput.value || '123456789';
+                displayStudentValidUntil.textContent = formatDate(studentValidUntilInput.value);
+                displayCardId.textContent = generateRandomId(); // Gera um novo ID a cada atualização
+
+                // Atualiza a foto do estudante e o logo da universidade se arquivos foram selecionados
+                previewImage(studentPhotoInput, displayStudentPhoto);
+                previewImage(universityLogoInput, displayUniversityLogo);
+
+                // Garante que os botões de download estejam visíveis
+                downloadCardBtn.style.display = 'inline-block';
+                downloadHtmlBtn.style.display = 'inline-block'; // <-- AGORA ESTE BOTÃO TAMBÉM É MOSTRADO
+            }
+
+            // --- Event Listeners ---
+
+            // Evento para o botão "Gerar Carteira"
+            generateCardBtn.addEventListener('click', updateCardDisplay);
+
+            // Eventos para os inputs de arquivo (para pré-visualização imediata)
+            studentPhotoInput.addEventListener('change', () => previewImage(studentPhotoInput, displayStudentPhoto));
+            universityLogoInput.addEventListener('change', () => previewImage(universityLogoInput, displayUniversityLogo));
+
+            // Evento para o botão "Baixar Imagem da Carteira"
+            downloadCardBtn.addEventListener('click', () => {
+                // Esconde temporariamente os botões para não aparecerem na imagem
+                generateCardBtn.style.display = 'none';
+                downloadCardBtn.style.display = 'none';
+                downloadHtmlBtn.style.display = 'none'; // Esconde o botão HTML também na captura da imagem
+
+                html2canvas(studentCardDisplay, {
+                    scale: 2, // Aumenta a escala para melhor qualidade da imagem
+                    useCORS: true, // Necessário para carregar imagens de URLs externas (logos UNE/UBES/ANPG)
+                    allowTaint: true, // Permite carregar imagens locais sem problema de CORS (para uploads)
+                }).then(canvas => {
+                    // Cria um link temporário para download
+                    const link = document.createElement('a');
+                    link.download = 'carteira_de_estudante.png';
+                    link.href = canvas.toDataURL('image/png'); // Converte o canvas para URL de imagem PNG
+                    link.click(); // Simula o clique para iniciar o download
+
+                    // Volta a exibir os botões
+                    generateCardBtn.style.display = 'inline-block';
+                    downloadCardBtn.style.display = 'inline-block';
+                    downloadHtmlBtn.style.display = 'inline-block'; // Volta a exibir o botão HTML
+                }).catch(error => {
+                    console.error('Erro ao gerar a imagem:', error);
+                    alert('Não foi possível gerar a imagem da carteira. Verifique o console para mais detalhes.');
+                    // Volta a exibir os botões mesmo em caso de erro
+                    generateCardBtn.style.display = 'inline-block';
+                    downloadCardBtn.style.display = 'inline-block';
+                    downloadHtmlBtn.style.display = 'inline-block'; // Volta a exibir o botão HTML
+                });
+            });
+
+            // NOVO EVENTO: Abrir HTML da Carteira em Nova Aba (OU SALVAR SE PREFERIR, VAMOS USAR ABRIR PRIMEIRO)
+            downloadHtmlBtn.addEventListener('click', () => {
+                // Clona o elemento da carteira para manipular sem afetar a exibição atual
+                const clonedCard = studentCardDisplay.cloneNode(true);
+
+                // Remove IDs para evitar conflitos se o HTML for embutido em outra página
+                clonedCard.removeAttribute('id');
+                clonedCard.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+
+                // Garante que o placeholder 'FOTO' seja exibido no HTML gerado se a foto estiver vazia
+                const clonedStudentPhotoContainer = clonedCard.querySelector('.student-photo-container');
+                const clonedStudentPhoto = clonedCard.querySelector('.student-photo-container img');
+
+                if (clonedStudentPhotoContainer) {
+                    if (!clonedStudentPhoto || !clonedStudentPhoto.src || clonedStudentPhoto.src === window.location.href) { // Verifica src vazio ou o href da página
+                        clonedStudentPhotoContainer.classList.add('show-placeholder-text');
+                    } else {
+                        clonedStudentPhotoContainer.classList.remove('show-placeholder-text');
+                    }
+                }
+
+                // Pega os estilos CSS que são relevantes para a carteira
+                // Melhorando a captura de CSS para incluir todos os estilos internos
+                let cardStyle = '';
+                const styleTags = document.querySelectorAll('style');
+                styleTags.forEach(styleTag => {
+                    cardStyle += styleTag.textContent + '\n';
+                });
+
+                // Cria o HTML completo para a carteira
+                const fullHtmlContent = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carteira de Estudante Digital (HTML)</title>
+    <style>
+        /* CSS Autocontido da Carteira */
+        /* Incluído todo o CSS da página original para garantir a estilização */
+        ${cardStyle}
+        /* Estilos adicionais para a nova aba */
+        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f2f5; }
+        .student-card-container { margin: 20px; } /* Adiciona uma margem para a carteira na nova página */
+    </style>
+</head>
+<body>
+    ${clonedCard.outerHTML}
+</body>
+</html>`;
+
+                // Abre uma nova janela e escreve o HTML nela
+                const newWindow = window.open('', '_blank');
+                if (newWindow) {
+                    newWindow.document.write(fullHtmlContent);
+                    newWindow.document.close(); // Fecha o documento para garantir que o conteúdo seja renderizado
+                } else {
+                    alert('Não foi possível abrir a nova aba. Verifique as configurações de bloqueio de pop-ups.');
+                }
+            });
+
+
+            // Chama a função uma vez ao carregar para preencher com os valores iniciais (e garantir visibilidade dos botões)
+            updateCardDisplay();
+        });
+    </script>
+</body>
+</html>
